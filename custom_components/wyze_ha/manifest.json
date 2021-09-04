@@ -1,0 +1,10 @@
+{
+  "domain": "wyze_ha",
+  "name": "Wyze HA",
+  "config_flow": true,
+  "documentation": "https://github.com/alanjames1987/Wyze-HA",
+  "requirements": ["wyze_sdk==1.2.2"],
+  "codeowners": ["@alanjames1987"],
+  "iot_class": "cloud_polling",
+  "version": "0.0.1"
+}
