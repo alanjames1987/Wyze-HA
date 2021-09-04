@@ -15,6 +15,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_FAN_SPEED,
     SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME,
+    SUPPORT_SEND_COMMAND,
     SUPPORT_START,
     SUPPORT_STATE,
     SUPPORT_STATUS,
@@ -36,6 +37,7 @@ SUPPORT_WYZE_ROBOT_VACUUM = (
     | SUPPORT_FAN_SPEED
     | SUPPORT_PAUSE
     | SUPPORT_RETURN_HOME
+    | SUPPORT_SEND_COMMAND
     | SUPPORT_START
     | SUPPORT_STATE
     | SUPPORT_STATUS
@@ -107,14 +109,19 @@ class WyzeVacuumEntity(StateVacuumEntity):
     @property
     def extra_state_attributes(self) -> dict:
         """Return a dictionary of device state attributes specific to sharkiq."""
-        data = {
+        rooms = []
+        for room in self._vacuum.current_map.rooms:
+            rooms.append({
+                "id": room.id,
+                "name": room.name,
+            })
+        return {
             "IP Address": self._vacuum.ip,
             "SSID": self._vacuum.ssid,
-            "Firmware Version": self._vacuum.firmware_version,
-            "Hardware Version": self._vacuum.hardware_version,
+            "RSSI": self._vacuum.rssi,
             "MAC": self._mac,
+            "Rooms": rooms
         }
-        return data
 
     @property
     def unique_id(self) -> str:
@@ -217,6 +224,18 @@ class WyzeVacuumEntity(StateVacuumEntity):
         )
 
         self.update()
+
+    def send_command(self, command, params=None, **kwargs):
+        """Perform a spot clean-up."""
+
+        vacuum = self._client.vacuums.info(device_mac=self._mac)
+
+        # using segmented_cleanup and segment_ids to match with Valetudo room cleaning command
+        if command in "segmented_cleanup":
+            if "segment_ids" in params:
+                segment_ids = [room.id for room in vacuum.current_map.rooms if room.name in params["segment_ids"]]
+                self._client.vacuums.sweep_rooms(device_mac=self._mac, room_ids=segment_ids)
+                self.update()
 
     def update(self):
         """This function updates the entity."""
