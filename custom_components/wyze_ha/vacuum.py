@@ -22,9 +22,11 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
 )
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 
 from wyze_sdk import Client
+from wyze_sdk.errors import WyzeApiError
 from wyze_sdk.models.devices.vacuums import VacuumSuctionLevel, VacuumMode
 
 from .const import _LOGGER, DOMAIN, CONF_CLIENT
@@ -219,15 +221,23 @@ class WyzeVacuumEntity(StateVacuumEntity):
     def update(self):
         """This function updates the entity."""
 
-        self._vacuum = self._client.vacuums.info(device_mac=self._mac)
+        try:
 
-        if self._vacuum.mode in [VacuumMode.SWEEPING]:
-            self._mode = STATE_CLEANING
-        elif self._vacuum.mode in [VacuumMode.IDLE, VacuumMode.BREAK_POINT]:
-            self._mode = STATE_DOCKED
-        elif self._vacuum.mode in [VacuumMode.ON_WAY_CHARGE, VacuumMode.FULL_FINISH_SWEEPING_ON_WAY_CHARGE]:
-            self._mode = STATE_RETURNING
-        elif self._vacuum.mode in [VacuumMode.PAUSE]:
-            self._mode = STATE_PAUSED
-        else:
-            self._mode = STATE_ERROR
+            self._vacuum = self._client.vacuums.info(device_mac=self._mac)
+
+            if self._vacuum.mode in [VacuumMode.SWEEPING]:
+                self._mode = STATE_CLEANING
+            elif self._vacuum.mode in [VacuumMode.IDLE, VacuumMode.BREAK_POINT]:
+                self._mode = STATE_DOCKED
+            elif self._vacuum.mode in [VacuumMode.ON_WAY_CHARGE, VacuumMode.FULL_FINISH_SWEEPING_ON_WAY_CHARGE]:
+                self._mode = STATE_RETURNING
+            elif self._vacuum.mode in [VacuumMode.PAUSE]:
+                self._mode = STATE_PAUSED
+            else:
+                self._mode = STATE_ERROR
+
+        except WyzeApiError as exc:
+            raise CannotConnect from exc
+
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""
