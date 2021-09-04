@@ -33,7 +33,8 @@ async def async_setup(
         for entry in hass.config_entries.async_entries(DOMAIN):
             if (
                 entry.data.get(CONF_EMAIL) == domainconfig[CONF_EMAIL]
-                and entry.data.get(CONF_PASSWORD) == domainconfig[CONF_PASSWORD]
+                and
+                entry.data.get(CONF_PASSWORD) == domainconfig[CONF_PASSWORD]
             ):
                 _LOGGER.debug("Updating existing entry")
                 hass.config_entries.async_update_entry(
@@ -47,15 +48,14 @@ async def async_setup(
                 break
     if not entry_found:
         _LOGGER.debug("Creating new config entry")
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    CONF_EMAIL: domainconfig[CONF_EMAIL],
-                    CONF_PASSWORD: domainconfig[CONF_PASSWORD],
-                },
-            )
+
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_EMAIL: domainconfig[CONF_EMAIL],
+                CONF_PASSWORD: domainconfig[CONF_PASSWORD],
+            },
         )
 
     return True

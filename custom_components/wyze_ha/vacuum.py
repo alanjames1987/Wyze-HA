@@ -9,6 +9,7 @@ from homeassistant.components.vacuum import (
     STATE_PAUSED,
     STATE_CLEANING,
     STATE_RETURNING,
+    STATE_DOCKED,
     STATE_ERROR,
     SUPPORT_BATTERY,
     SUPPORT_FAN_SPEED,
@@ -17,6 +18,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_START,
     SUPPORT_STATE,
     SUPPORT_STATUS,
+    SUPPORT_STOP,
     StateVacuumEntity,
 )
 
@@ -35,6 +37,7 @@ SUPPORT_WYZE_ROBOT_VACUUM = (
     | SUPPORT_START
     | SUPPORT_STATE
     | SUPPORT_STATUS
+    | SUPPORT_STOP
 )
 
 OPERATING_STATE_MAP = {
@@ -61,16 +64,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     client: Client = hass.data[DOMAIN][config_entry.entry_id][CONF_CLIENT]
 
     def get_vacuums():
-        vacuums_devices = []
-        vacuums_list = client.vacuums.list()
-        for v in vacuums_list:
+        vacuums = []
+        for v in client.vacuums.list():
             vacuum = client.vacuums.info(device_mac=v.mac)
-            vacuums_devices.append(vacuum)
-        return vacuums_devices
+            vacuums.append(WyzeVacuumEntity(hass, client, vacuum))
+        return vacuums
 
     vacuums = await hass.async_add_executor_job(get_vacuums)
 
-    async_add_entities([WyzeVacuumEntity(hass, client, vacuum) for vacuum in vacuums])
+    async_add_entities(vacuums)
 
 
 class WyzeVacuumEntity(StateVacuumEntity):
@@ -82,26 +84,7 @@ class WyzeVacuumEntity(StateVacuumEntity):
         self._client = client
         self._vacuum = vacuum
         self._mac = (self._vacuum.product.model + "_" + self._vacuum.mac).upper()
-
-    @property
-    def is_online(self) -> bool:
-        """Tell us if the device is online."""
-        return self._vacuum.is_online
-
-    @property
-    def name(self) -> str:
-        """Device name."""
-        return self._vacuum.nickname
-
-    @property
-    def serial_number(self) -> str:
-        """Vacuum API serial number (DSN)."""
-        return self._vacuum.ssid
-
-    @property
-    def model(self) -> str:
-        """Vacuum model number."""
-        return self._vacuum.product.model
+        self._mode = STATE_DOCKED
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -112,7 +95,6 @@ class WyzeVacuumEntity(StateVacuumEntity):
             "manufacturer": "WyzeLabs",
             "model": self._vacuum.product.model,
             "sw_version": self._vacuum.firmware_version,
-            "hw_version": self._vacuum.hardware_version,
         }
 
     @property
@@ -121,19 +103,16 @@ class WyzeVacuumEntity(StateVacuumEntity):
         return SUPPORT_WYZE_ROBOT_VACUUM
 
     @property
-    def is_docked(self) -> bool | None:
-        """Is vacuum docked."""
-        return self._vacuum.mode == ""
-
-    @property
-    def operating_mode(self) -> str | None:
-        """Operating mode.."""
-        return str(self._vacuum.clean_level)
-
-    @property
-    def state(self):
-        """Get the current vacuum state."""
-        return OPERATING_STATE_MAP.get(self._vacuum.mode)
+    def extra_state_attributes(self) -> dict:
+        """Return a dictionary of device state attributes specific to sharkiq."""
+        data = {
+            "IP Address": self._vacuum.ip,
+            "SSID": self._vacuum.ssid,
+            "Firmware Version": self._vacuum.firmware_version,
+            "Hardware Version": self._vacuum.hardware_version,
+            "MAC": self._mac,
+        }
+        return data
 
     @property
     def unique_id(self) -> str:
@@ -141,9 +120,19 @@ class WyzeVacuumEntity(StateVacuumEntity):
         return self._mac
 
     @property
-    def available(self) -> bool:
-        """Determine if the sensor is available based on API results."""
-        return self._vacuum.is_online
+    def name(self) -> str:
+        """Device name."""
+        return self._vacuum.nickname
+
+    @property
+    def status(self):
+        """Return the status of the vacuum cleaner."""
+        return self._mode
+
+    @property
+    def state(self):
+        """Get the current vacuum state."""
+        return self._mode
 
     @property
     def battery_level(self):
@@ -164,82 +153,81 @@ class WyzeVacuumEntity(StateVacuumEntity):
         """Get the list of available fan speed steps of the vacuum cleaner."""
         return list(FAN_SPEEDS_MAP)
 
-    @property
-    def rssi(self) -> int | None:
-        """Get the WiFi RSSI."""
-        return self._vacuum.rssi
+    def start(self):
+        """Start the device."""
 
-    @property
-    def ssid(self) -> int | None:
-        """Get the WiFi SSID."""
-        return self._vacuum.ssid
+        self._client.vacuums.clean(
+            device_mac=self._mac,
+            device_model=self._vacuum.product.model,
+        )
 
-    @property
-    def ip(self) -> int | None:
-        """Get the WiFi IP."""
-        return self._vacuum.ip
+        self._mode = STATE_CLEANING
+
+        self.update()
+
+    def pause(self):
+        """Pause the cleaning task."""
+
+        self._client.vacuums.pause(
+            device_mac=self._mac,
+            device_model=self._vacuum.product.model,
+        )
+
+        self._mode = STATE_PAUSED
+
+        self.update()
+
+    def stop(self):
+        """Stop the cleaning task."""
+
+        self._client.vacuums.pause(
+            device_mac=self._mac,
+            device_model=self._vacuum.product.model,
+        )
+
+        self._mode = STATE_STOP
+
+        self.update()
+
+    def return_to_base(self, **kwargs):
+        """Have the device return to base."""
+
+        self._client.vacuums.dock(
+            device_mac=self._mac,
+            device_model=self._vacuum.product.model,
+        )
+
+        self._mode = STATE_RETURNING
+
+        self.update()
 
     def clean_spot(self, **kwargs):
         """Clean a spot. Not yet implemented."""
         raise NotImplementedError()
 
-    async def async_start(self):
-        """Start the device."""
-
-        def start():
-            self._client.vacuums.clean(
-                device_mac=self._mac,
-                device_model=self._vacuum.product.model,
-            )
-
-        await self._hass.async_add_executor_job(start)
-
-        await self.async_update()
-
-    async def async_pause(self):
-        """Pause the cleaning task."""
-
-        def pause():
-            self._client.vacuums.pause(
-                device_mac=self._mac,
-                device_model=self._vacuum.product.model,
-            )
-
-        await self._hass.async_add_executor_job(pause)
-
-        await self.async_update()
-
-    async def async_return_to_base(self, **kwargs):
-        """Have the device return to base."""
-
-        def dock():
-            self._client.vacuums.dock(
-                device_mac=self._mac,
-                device_model=self._vacuum.product.model,
-            )
-
-        await self._hass.async_add_executor_job(dock)
-
-        await self.async_update()
-
-    async def async_set_fan_speed(self, fan_speed: str, **kwargs):
+    def set_fan_speed(self, fan_speed: str, **kwargs):
         """Set the fan speed."""
 
-        def set_fan_speed():
-            self._client.vacuums.set_suction_level(
-                device_mac=self._mac,
-                device_model=self._vacuum.product.model,
-                suction_level=FAN_SPEEDS_MAP[fan_speed],
-            )
+        self._client.vacuums.set_suction_level(
+            device_mac=self._mac,
+            device_model=self._vacuum.product.model,
+            suction_level=FAN_SPEEDS_MAP[fan_speed],
+        )
 
-        await self._hass.async_add_executor_job(set_fan_speed)
+        self.update()
 
-        await self.async_update()
-
-    async def async_update(self):
+    def update(self):
         """This function updates the entity."""
 
-        def update():
-            return self._client.vacuums.info(device_mac=self._mac)
+        self._vacuum = self._client.vacuums.info(device_mac=self._mac)
 
-        self._vacuum = await self._hass.async_add_executor_job(update)
+        if self._vacuum.mode in [VacuumMode.SWEEPING]:
+            self._mode = STATE_CLEANING
+        elif self._vacuum.mode in [VacuumMode.IDLE, VacuumMode.BREAK_POINT]:
+            self._mode = STATE_DOCKED
+        elif self._vacuum.mode in [VacuumMode.ON_WAY_CHARGE, VacuumMode.FULL_FINISH_SWEEPING_ON_WAY_CHARGE]:
+            self._mode = STATE_RETURNING
+        elif self._vacuum.mode in [VacuumMode.PAUSE]:
+            self._mode = STATE_PAUSED
+        else:
+            self._mode = STATE_ERROR
