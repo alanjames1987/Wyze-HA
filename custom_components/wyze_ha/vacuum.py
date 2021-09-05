@@ -194,7 +194,7 @@ class WyzeVacuumEntity(StateVacuumEntity):
             device_model=self._vacuum.product.model,
         )
 
-        self._mode = STATE_STOP
+        self._mode = STATE_PAUSED
 
         self.update()
 
