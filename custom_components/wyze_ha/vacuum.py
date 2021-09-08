@@ -172,7 +172,7 @@ class WyzeVacuumEntity(StateVacuumEntity):
 
         self._mode = STATE_CLEANING
 
-        self.update()
+        self.schedule_update_ha_state()
 
     def pause(self):
         """Pause the cleaning task."""
@@ -184,7 +184,7 @@ class WyzeVacuumEntity(StateVacuumEntity):
 
         self._mode = STATE_PAUSED
 
-        self.update()
+        self.schedule_update_ha_state()
 
     def stop(self):
         """Stop the cleaning task."""
@@ -196,7 +196,7 @@ class WyzeVacuumEntity(StateVacuumEntity):
 
         self._mode = STATE_PAUSED
 
-        self.update()
+        self.schedule_update_ha_state()
 
     def return_to_base(self, **kwargs):
         """Have the device return to base."""
@@ -208,7 +208,7 @@ class WyzeVacuumEntity(StateVacuumEntity):
 
         self._mode = STATE_RETURNING
 
-        self.update()
+        self.schedule_update_ha_state()
 
     def clean_spot(self, **kwargs):
         """Clean a spot. Not yet implemented."""
@@ -223,7 +223,7 @@ class WyzeVacuumEntity(StateVacuumEntity):
             suction_level=FAN_SPEEDS_MAP[fan_speed],
         )
 
-        self.update()
+        self.schedule_update_ha_state()
 
     def send_command(self, command, params=None, **kwargs):
         """Perform a spot clean-up."""
@@ -235,7 +235,7 @@ class WyzeVacuumEntity(StateVacuumEntity):
             if "segment_ids" in params:
                 segment_ids = [room.id for room in vacuum.current_map.rooms if room.name in params["segment_ids"]]
                 self._client.vacuums.sweep_rooms(device_mac=self._mac, room_ids=segment_ids)
-                self.update()
+                self.schedule_update_ha_state()
 
     def update(self):
         """This function updates the entity."""
