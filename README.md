@@ -2,17 +2,21 @@
     <img src="https://raw.githubusercontent.com/alanjames1987/Wyze-HA/master/.attachments/hero.png">
 </p>
 
-# Wyze-HA
+<h1 align="center">
 
-## Notes
+[Wyze Custom Integration](https://github.com/alanjames1987/Wyze-HA) for Home Assistant
+
+</h1>
+
+# About
 
 This is a custom integration to allow control and viewing of the Wyze robot vacuum from within Home Assistant.
 
 This integration is based on [Wyze-SDK](https://github.com/shauntarves/wyze-sdk) from [@shauntarves](https://github.com/shauntarves) and since this SDK is not official the integration can break whenever Wyze makes changes to their API.
 
-## Installation
+# Installation
 
-### HACS
+## HACS
 
 1. It's recommended to install this custom component using [HACS](https://hacs.xyz/).
 
@@ -32,7 +36,7 @@ This integration is based on [Wyze-SDK](https://github.com/shauntarves/wyze-sdk)
 
 1. This may take some time but once it's complete restart Home Assistant.
 
-### Home Assistant Devices & Services
+## Home Assistant Devices & Services
 
 1. Once Home Assistant restarts navigate to the Home Assistant Devices & Services page by clicking the gear icon in the bottom left of your Home Assistant interface and then clicking "Devices & Services".
 
