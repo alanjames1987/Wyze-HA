@@ -1,4 +1,4 @@
-"""The Wyze HA integration."""
+"""The Wyze integration."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from .const import _LOGGER, API_TIMEOUT, DOMAIN, PLATFORMS, CONF_CLIENT
 async def async_setup(
     hass: HomeAssistant, config: HomeAssistantConfig, discovery_info=None
 ):
-    """Set up Wyze HA from a config entry."""
+    """Set up Wyze from a config entry."""
 
     if DOMAIN not in config:
         _LOGGER.debug(

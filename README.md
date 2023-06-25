@@ -1,3 +1,7 @@
+<p align="center">
+    <img src="https://raw.githubusercontent.com/alanjames1987/Wyze-HA/master/.attachments/hero.png">
+</p>
+
 # Wyze-HA
 
 ## Notes
@@ -24,15 +28,15 @@ This integration is based on [Wyze-SDK](https://github.com/shauntarves/wyze-sdk)
 
 1. Click add and the integration will be added to HACS.
 
-1. You should now see the integration in your HACS integation. Click on it and click "Install".
+1. You should now see the integration in your HACS integations list. Click on it and click "Download" in the bottom corner. Select a version and click "Download".
 
 1. This may take some time but once it's complete restart Home Assistant.
 
-### Home Assistant Integrations
+### Home Assistant Devices & Services
 
-1. Once Home Assistant restarts navigate to the Home Assistant integrations page by clicking the gear icon in the bottom left of your Home Assistant interface and then clicking "Integrations".
+1. Once Home Assistant restarts navigate to the Home Assistant Devices & Services page by clicking the gear icon in the bottom left of your Home Assistant interface and then clicking "Devices & Services".
 
-1. Once there click the "Add Integration" button in the bottom right corner and search for "Wyze HA".
+1. Once there click the "Add Integration" button in the bottom right corner and search for "Wyze".
 
 1. Click it and the integration will install and start the configuration process.
 

@@ -1,4 +1,4 @@
-"""Config flow for Wyze HA integration."""
+"""Config flow for Wyze integration."""
 
 from __future__ import annotations
 

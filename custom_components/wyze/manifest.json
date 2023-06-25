@@ -1,6 +1,6 @@
 {
   "domain": "wyze_ha",
-  "name": "Wyze HA",
+  "name": "Wyze",
   "config_flow": true,
   "documentation": "https://github.com/alanjames1987/Wyze-HA",
   "issue_tracker": "https://github.com/alanjames1987/Wyze-HA/issues",
@@ -10,5 +10,5 @@
   ],
   "codeowners": ["@alanjames1987"],
   "iot_class": "cloud_polling",
-  "version": "0.0.1"
+  "version": "0.0.2"
 }

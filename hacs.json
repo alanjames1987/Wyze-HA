@@ -1,7 +1,8 @@
 {
-    "name": "Wyze HA",
+    "name": "Wyze",
     "domains": [
         "vacuum"
     ],
-    "iot_class": "cloud_poll"
+    "iot_class": "cloud_poll",
+    "render_readme": true
 }
