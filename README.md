@@ -36,7 +36,7 @@ This integration is based on [Wyze-SDK](https://github.com/shauntarves/wyze-sdk)
 
 1. This may take some time but once it's complete restart Home Assistant.
 
-## Home Assistant Devices & Services
+## Configure
 
 1. Once Home Assistant restarts navigate to the Home Assistant Devices & Services page by clicking the gear icon in the bottom left of your Home Assistant interface and then clicking "Devices & Services".
 
